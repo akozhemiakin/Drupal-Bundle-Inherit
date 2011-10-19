@@ -1,0 +1,3 @@
+name = Bundle Inheritance
+description = Provide API for modules to implement bundle inheritance logic
+core = 7.x

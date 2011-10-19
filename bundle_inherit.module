@@ -1,0 +1,193 @@
+<?php
+function bundle_inherit_perform($entity_type, $bundle, $bundle_parent, $strict = TRUE){
+  /*
+   * Get fields from parent bundle
+   */
+  $instances = field_info_instances($entity_type, $bundle_parent);
+  foreach($instances as $instance){
+    $new_instance = $instance;
+    $new_instance['bundle'] = $bundle;
+    
+    if($strict) $new_instance['locked'] = TRUE;
+    
+    $new_instance = field_create_instance($new_instance);
+    $query = db_select('field_config_instance', 'fci');
+    $query->addField('fci', 'id');
+    $query->condition('fci.bundle', $bundle);
+    $new_instance['id'] = $query->execute()->fetchField();
+  }
+  /*
+   * Check if we perform strict inheritance.
+   */
+  if($strict){
+    db_insert('bundle_hierarchy')
+      ->fields(array(
+        'entity_type' => $entity_type,
+        'bundle' => $bundle,
+        'bundle_parent' => $bundle_parent
+      ))
+      ->execute();
+  }
+}
+
+function bundle_inherit_field_create_instance($instance){
+  $children = db_select('bundle_hierarchy', 'bh')
+                ->fields('bh', array('bundle'))
+                ->condition('bundle_parent', $instance['bundle'])
+                ->condition('entity_type', $instance['entity_type'])
+                ->execute()
+                ->fetchCol();
+  foreach($children as $bundle){
+    $new_instance = $instance;
+    $new_instance['bundle'] = $bundle;
+    $new_instance['locked'] = TRUE;
+    field_create_instance($new_instance);
+  }
+}
+
+function bundle_inherit_field_update_instance($instance, $prior_instance){
+  $children = db_select('bundle_hierarchy', 'bh')
+                ->fields('bh', array('bundle'))
+                ->condition('bundle_parent', $prior_instance['bundle'])
+                ->condition('entity_type', $prior_instance['entity_type'])
+                ->execute()
+                ->fetchCol();
+  foreach($children as $bundle){
+    $new_instance = $instance;
+    $new_instance['bundle'] = $bundle;
+    $new_instance['locked'] = TRUE;
+    field_update_instance($new_instance);
+  }
+}
+
+function bundle_inherit_field_delete_instance($instance){
+  $children = bundle_inherit_bundle_get_children($instance['entity_type'], $instance['bundle']);
+  foreach($children as $bundle){
+    $new_instance = $instance;
+    $new_instance['bundle'] = $bundle;
+    $new_instance['locked'] = FALSE;
+    try{
+      field_update_instance($new_instance);
+    }
+    catch(Exception $e){ drupal_set_message($e->getMessage(), 'error'); }
+  }
+}
+
+function bundle_inherit_form_field_ui_field_overview_form_alter(&$form, &$form_instance, $form_id){
+  $form['#validate'][] = 'bundle_inherit_validate_field_instance_creation';
+}
+
+function bundle_inherit_validate_field_instance_creation($form, &$form_state){
+  $form_values = $form_state['values']['fields'];
+  if (!empty($form_values['_add_existing_field']['field_name'])) {
+    $children = bundle_inherit_bundle_get_children_all($form['#entity_type'], $form['#bundle']);
+    $bundles_with_instance = array();
+    foreach($children as $child){
+      $prior_instance = field_info_instance($form['#entity_type'], $form_values['_add_existing_field']['field_name'], $child);
+      if(!empty($prior_instance)){
+        $bundles_with_instance[] = $prior_instance['bundle'];
+      }
+    }
+    if(count($bundles_with_instance) > 0){
+      $string = implode(", ", $bundles_with_instance);
+      form_set_error('fields][_add_existing_field', t("Instance of the field %field can't be attached to %bundle bundle because this field instances are already attached to some of this bundle children bundles: %children", array('%bundle' => $form['#bundle'], '%field' => $form_values['_add_existing_field']['field_name'], '%children' => $string)));
+    }
+  }
+}
+
+function bundle_inherit_bundle_get_children($entity_type, $bundle_parent){
+  $children = &drupal_static(__FUNCTION__);
+  if(!isset($children[$entity_type][$bundle_parent])){
+    $children[$entity_type][$bundle_parent] = db_select('bundle_hierarchy', 'bh')
+                    ->fields('bh', array('bundle'))
+                    ->condition('bundle_parent', $bundle_parent)
+                    ->condition('entity_type', $entity_type)
+                    ->execute()
+                    ->fetchCol();
+  }
+  return $children[$entity_type][$bundle_parent];
+}
+
+function bundle_inherit_bundle_get_children_all($entity_type, $bundle_parent){
+  $children = array();
+  $children = bundle_inherit_bundle_get_children($entity_type, $bundle_parent);
+  foreach($children as $child){
+    $children = array_merge($children, bundle_inherit_bundle_get_children_all($entity_type, $child));
+  }
+  return $children;
+}
+
+function bundle_inherit_bundle_get_parent($entity_type, $bundle){
+  $parent = &drupal_static(__FUNCTION__);
+  if(!isset($parent[$entity_type][$bundle])){
+    $parent[$entity_type][$bundle] = db_select('bundle_hierarchy', 'bh')
+           ->fields('bh', array('bundle_parent'))
+           ->condition('bh.bundle', $bundle)
+           ->execute()
+           ->fetchField();
+    if(!$parent[$entity_type][$bundle]) $parent[$entity_type][$bundle] = '';
+  }
+  return $parent[$entity_type][$bundle];
+}
+
+function bundle_inherit_attache_inherit_form(&$form, &$form_state, $entity_type){
+  $entity = entity_get_info($entity_type);
+  if(count($entity['bundles']) > 0){
+    $form['bundle_inherit'] = array(
+      '#type' => 'fieldset',
+      '#tree' => TRUE,
+      '#title' => t('Inheritance')
+    );
+    $form['bundle_inherit']['entity_type'] = array('#type' => 'value', '#value' => $entity_type);
+    $form['bundle_inherit']['#parents'] = array('bundle_inherit');
+    $form['bundle_inherit']['inherit'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Inherit from other type')
+    );
+    
+    foreach($entity['bundles'] as $bundle_name => $bundle){
+      $options[$bundle_name] = $bundle['label'];
+    }
+    $form['bundle_inherit']['parent_type'] = array(
+      '#type' => 'select',
+      '#options' => $options,
+      '#title' => t('Parent type'),
+      '#states' => array(
+        // Hide the settings when the cancel notify checkbox is disabled.
+        'invisible' => array(
+         'input[name="bundle_inherit[inherit]"]' => array('checked' =>FALSE),
+        ),
+      ),
+    );
+    $form['bundle_inherit']['mode'] = array(
+      '#type' => 'radios',
+      '#options' => array(
+        'strict' => t('Strict inherit'),
+        'soft' => t('Soft inherit'),
+      ),
+      '#default_value' => 'strict',
+      '#required' => TRUE,
+      '#states' => array(
+        // Hide the settings when the cancel notify checkbox is disabled.
+        'invisible' => array(
+         'input[name="bundle_inherit[inherit]"]' => array('checked' =>FALSE),
+        ),
+      ),
+      '#title' => t('Inheritance mode')
+    );
+  }
+}
+
+function bundle_inherit_attache_inherit_form_submit($bundle, &$form, &$form_state){
+  if(isset($form_state['values']['bundle_inherit']) && $form_state['values']['bundle_inherit']['inherit']){
+    $v = $form_state['values']['bundle_inherit'];
+    bundle_inherit_perform($v['entity_type'], $bundle, $v['parent_type'], $v['mode'] == 'strict' ? TRUE : FALSE);
+  }
+}
+
+function bundle_inherit_field_attach_delete_bundle($entity_type, $bundle, $instances){
+  db_delete('bundle_hierarchy')
+    ->condition('entity_type', $entity_type)
+    ->condition(db_or()->condition('bundle_parent', $bundle)->condition('bundle', $bundle))
+    ->execute();
+}
