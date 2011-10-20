@@ -159,7 +159,7 @@ function bundle_inherit_attache_inherit_form(&$form, &$form_state, $entity_type)
       '#options' => $options,
       '#title' => t('Parent type'),
       '#states' => array(
-        // Hide the settings when the cancel notify checkbox is disabled.
+        // Hide the inheritance settings when inherit checkbox is disabled.
         'invisible' => array(
          'input[name="bundle_inherit[inherit]"]' => array('checked' =>FALSE),
         ),
@@ -174,7 +174,7 @@ function bundle_inherit_attache_inherit_form(&$form, &$form_state, $entity_type)
       '#default_value' => 'strict',
       '#required' => TRUE,
       '#states' => array(
-        // Hide the settings when the cancel notify checkbox is disabled.
+        // Hide the inheritance settings when inherit checkbox is disabled.
         'invisible' => array(
          'input[name="bundle_inherit[inherit]"]' => array('checked' =>FALSE),
         ),

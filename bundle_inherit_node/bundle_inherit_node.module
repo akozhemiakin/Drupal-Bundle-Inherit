@@ -9,6 +9,7 @@
 function bundle_inherit_node_form_alter(&$form, &$form_state, $form_id){
   $entity = entity_get_info('node');
   if($form_id == 'node_type_form' && empty($form['#node_type']->type) && count($entity['bundles']) > 0){
+    // Attache inheritance form
     bundle_inherit_attache_inherit_form($form, $form_state, 'node');
     $form['bundle_inherit']['#group'] = 'additional_settings';
     $form['#submit'][] = 'bundle_inherit_node_form_submit';
