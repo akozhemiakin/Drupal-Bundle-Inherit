@@ -49,12 +49,7 @@ function bundle_inherit_perform($entity_type, $bundle, $bundle_parent, $strict =
  * @param type $instance 
  */
 function bundle_inherit_field_create_instance($instance) {
-  $children = db_select('bundle_hierarchy', 'bh')
-                ->fields('bh', array('bundle'))
-                ->condition('bundle_parent', $instance['bundle'])
-                ->condition('entity_type', $instance['entity_type'])
-                ->execute()
-                ->fetchCol();
+  $children = bundle_inherit_bundle_get_children($instance['entity_type'], $instance['bundle']);
   foreach ($children as $bundle) {
     $new_instance = $instance;
     $new_instance['bundle'] = $bundle;
@@ -70,12 +65,8 @@ function bundle_inherit_field_create_instance($instance) {
  * @param type $prior_instance 
  */
 function bundle_inherit_field_update_instance($instance, $prior_instance) {
-  $children = db_select('bundle_hierarchy', 'bh')
-                ->fields('bh', array('bundle'))
-                ->condition('bundle_parent', $prior_instance['bundle'])
-                ->condition('entity_type', $prior_instance['entity_type'])
-                ->execute()
-                ->fetchCol();
+  $children = bundle_inherit_bundle_get_children($prior_instance['entity_type'], $prior_instance['bundle']);
+
   foreach ($children as $bundle) {
     $new_instance = $instance;
     $new_instance['bundle'] = $bundle;
