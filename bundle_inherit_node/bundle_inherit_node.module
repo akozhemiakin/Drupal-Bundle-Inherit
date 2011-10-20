@@ -1,5 +1,10 @@
 <?php
 /**
+ * @file 
+ * Bundle Inherit Node module.
+ */
+
+/**
  * 
  * Implements hook_form_alter();
  * @param unknown_type $form

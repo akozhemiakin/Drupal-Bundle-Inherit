@@ -1,4 +1,17 @@
 <?php
+/**
+ * @file
+ * Bundle Inherit module.
+ */
+
+/**
+ * Perform necesary inherit operations
+ * 
+ * @param type $entity_type
+ * @param type $bundle
+ * @param type $bundle_parent
+ * @param type $strict 
+ */
 function bundle_inherit_perform($entity_type, $bundle, $bundle_parent, $strict = TRUE){
   /*
    * Get fields from parent bundle
@@ -30,6 +43,11 @@ function bundle_inherit_perform($entity_type, $bundle, $bundle_parent, $strict =
   }
 }
 
+/**
+ * Implements hook_field_create_instance().
+ * 
+ * @param type $instance 
+ */
 function bundle_inherit_field_create_instance($instance){
   $children = db_select('bundle_hierarchy', 'bh')
                 ->fields('bh', array('bundle'))
@@ -45,6 +63,12 @@ function bundle_inherit_field_create_instance($instance){
   }
 }
 
+/**
+ * Implements hook_field_update_instance().
+ * 
+ * @param type $instance
+ * @param type $prior_instance 
+ */
 function bundle_inherit_field_update_instance($instance, $prior_instance){
   $children = db_select('bundle_hierarchy', 'bh')
                 ->fields('bh', array('bundle'))
@@ -60,6 +84,10 @@ function bundle_inherit_field_update_instance($instance, $prior_instance){
   }
 }
 
+/**
+ * Implements hook_field_delete_instance().
+ * @param type $instance 
+ */
 function bundle_inherit_field_delete_instance($instance){
   $children = bundle_inherit_bundle_get_children($instance['entity_type'], $instance['bundle']);
   foreach($children as $bundle){
@@ -73,10 +101,30 @@ function bundle_inherit_field_delete_instance($instance){
   }
 }
 
+/**
+ * Implements hook_form_FORMID_alter
+ * 
+ * Attach additional validation callback to the field_ui_field_overview_form. 
+ * When adding new field instance to the parent type we should check that all of it children types hase not that field instances.
+ * @param array $form
+ * @param type $form_instance
+ * @param type $form_id 
+ * @see bundle_inherit_validate_field_instance_creation
+ */
 function bundle_inherit_form_field_ui_field_overview_form_alter(&$form, &$form_instance, $form_id){
   $form['#validate'][] = 'bundle_inherit_validate_field_instance_creation';
 }
 
+/**
+ * Additional validation function to the field_ui_field_overview_form.
+ * 
+ * While adding existing field instance, get type this form is created for and set form error 
+ * if any of this type children has instance of this field.
+ * 
+ * @param type $form
+ * @param type $form_state
+ * @see bundle_inherit_form_field_ui_field_overview_form_alter
+ */
 function bundle_inherit_validate_field_instance_creation($form, &$form_state){
   $form_values = $form_state['values']['fields'];
   if (!empty($form_values['_add_existing_field']['field_name'])) {
@@ -95,6 +143,13 @@ function bundle_inherit_validate_field_instance_creation($form, &$form_state){
   }
 }
 
+/**
+ * Get direct children bundles of the selected entity type bundle.
+ * 
+ * @param type $entity_type
+ * @param type $bundle_parent
+ * @return type 
+ */
 function bundle_inherit_bundle_get_children($entity_type, $bundle_parent){
   $children = &drupal_static(__FUNCTION__);
   if(!isset($children[$entity_type][$bundle_parent])){
@@ -108,6 +163,13 @@ function bundle_inherit_bundle_get_children($entity_type, $bundle_parent){
   return $children[$entity_type][$bundle_parent];
 }
 
+/**
+ * Get all children bundles of the selected entity type bundle.
+ * 
+ * @param type $entity_type
+ * @param type $bundle_parent
+ * @return type 
+ */
 function bundle_inherit_bundle_get_children_all($entity_type, $bundle_parent){
   $children = array();
   $children = bundle_inherit_bundle_get_children($entity_type, $bundle_parent);
@@ -117,6 +179,13 @@ function bundle_inherit_bundle_get_children_all($entity_type, $bundle_parent){
   return $children;
 }
 
+/**
+ * Get parent of the selected entity type bundle.
+ * 
+ * @param type $entity_type
+ * @param type $bundle
+ * @return string 
+ */
 function bundle_inherit_bundle_get_parent($entity_type, $bundle){
   $parent = &drupal_static(__FUNCTION__);
   if(!isset($parent[$entity_type][$bundle])){
@@ -198,6 +267,13 @@ function bundle_inherit_attache_inherit_form_submit($bundle, &$form, &$form_stat
   }
 }
 
+/**
+ * Implements hook_field_attach_delete_bundle().
+ * 
+ * @param type $entity_type
+ * @param type $bundle
+ * @param type $instances 
+ */
 function bundle_inherit_field_attach_delete_bundle($entity_type, $bundle, $instances){
   db_delete('bundle_hierarchy')
     ->condition('entity_type', $entity_type)

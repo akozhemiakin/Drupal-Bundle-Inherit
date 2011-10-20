@@ -1,5 +1,10 @@
 <?php
 /**
+ * @file
+ * Bundle Inherit module install file.
+ */
+
+/**
  * Implements hook_schema();
  * 
  * @return string 
