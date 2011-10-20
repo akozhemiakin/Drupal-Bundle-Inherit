@@ -130,6 +130,12 @@ function bundle_inherit_bundle_get_parent($entity_type, $bundle){
   return $parent[$entity_type][$bundle];
 }
 
+/**
+ * Attache ineritance form to selected form element
+ * @param type $form Parent form element to attache inheritance form to
+ * @param type $form_state From state from the parent form
+ * @param type $entity_type Entity type for which bundle is creating for
+ */
 function bundle_inherit_attache_inherit_form(&$form, &$form_state, $entity_type){
   $entity = entity_get_info($entity_type);
   if(count($entity['bundles']) > 0){
@@ -178,6 +184,13 @@ function bundle_inherit_attache_inherit_form(&$form, &$form_state, $entity_type)
   }
 }
 
+/**
+ * Should be executed when entity type creation form is submiting
+ * 
+ * @param type $bundle Newly created bundle name
+ * @param type $form
+ * @param type $form_state 
+ */
 function bundle_inherit_attache_inherit_form_submit($bundle, &$form, &$form_state){
   if(isset($form_state['values']['bundle_inherit']) && $form_state['values']['bundle_inherit']['inherit']){
     $v = $form_state['values']['bundle_inherit'];

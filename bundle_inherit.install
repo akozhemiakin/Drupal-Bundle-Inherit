@@ -1,4 +1,9 @@
 <?php
+/**
+ * Implements hook_schema();
+ * 
+ * @return string 
+ */
 function bundle_inherit_schema(){
   $schema['bundle_hierarchy'] = array(
     'description' => 'TODO: please describe this table!',
