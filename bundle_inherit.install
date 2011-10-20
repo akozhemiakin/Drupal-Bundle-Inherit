@@ -1,0 +1,33 @@
+<?php
+function bundle_inherit_schema(){
+  $schema['bundle_hierarchy'] = array(
+    'description' => 'TODO: please describe this table!',
+    'fields' => array(
+      'entity_type' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+      ),
+      'bundle' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+      ),
+      'bundle_parent' => array(
+        'description' => 'TODO: please describe this field!',
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('entity_type', 'bundle'),
+    'indexes' => array(
+      'parent' => array('entity_type', 'bundle_parent'),
+    ),
+  );
+    
+  
+  return $schema;
+}

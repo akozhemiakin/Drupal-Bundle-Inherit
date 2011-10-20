@@ -1,0 +1,4 @@
+name = Bundle Inheritance Node
+description = Allow to inherit one node type from other
+dependencies[] = bundle_inherit
+core = 7.x
