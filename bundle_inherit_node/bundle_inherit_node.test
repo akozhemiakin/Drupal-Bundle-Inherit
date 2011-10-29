@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Tests for bundle_inherit_node module
+ */
 
 class BundleInheritTestCase extends DrupalWebTestCase {
   protected $priveleged_user;
@@ -28,7 +32,7 @@ class BundleInheritTestCase extends DrupalWebTestCase {
     $this->parent_type = $this->drupalCreateContentType();
     
     // Add 5 custom fields
-    for($i = 0; $i < 5; $i++) {
+    for ($i = 0; $i < 5; $i++) {
       do{
         $field_name = strtolower($this->randomName());
       } while (field_info_field($field_name));
@@ -59,7 +63,7 @@ class BundleInheritTestCase extends DrupalWebTestCase {
     $this->drupalPost('admin/structure/types/add', $edit, t('Save content type'));
     $type_exists = db_query('SELECT 1 FROM {node_type} WHERE type = :type', array(':type' => $this->child_type_name))->fetchField();
     $this->assertTrue($type_exists, t('Type was created.'));
-    $type_inherited = db_query('SELECT 1 FROM {bundle_hierarchy} WHERE entity_type = :entity_type AND bundle = :bundle AND bundle_parent = :bundle_parent', array(':entity_type' => 'node',':bundle' => $this->child_type_name, ':bundle_parent' => $this->parent_type->type))->fetchField();
+    $type_inherited = db_query('SELECT 1 FROM {bundle_hierarchy} WHERE entity_type = :entity_type AND bundle = :bundle AND bundle_parent = :bundle_parent', array(':entity_type' => 'node', ':bundle' => $this->child_type_name, ':bundle_parent' => $this->parent_type->type))->fetchField();
     $this->assertTrue($type_inherited, t('Type was inherited.'));
   }
 }

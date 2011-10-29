@@ -1,9 +1,13 @@
 <?php
+/**
+ * @file
+ * Tests for bundle_inherit module
+ */
 
-class BundleInherit extends  DrupalWebTestCase{
+class BundleInherit extends  DrupalWebTestCase {
   protected $parent_type, $child_type, $custom_fields, $extra_field;
   
-  public static function getInfo(){
+  public static function getInfo() {
     return array(
       'name' => 'Bundle Inherit',
       'description' => 'Ensure that the Bundle Inherit module works properly',
@@ -23,7 +27,7 @@ class BundleInherit extends  DrupalWebTestCase{
       $field_name = strtolower($this->randomName());
     } while (field_info_field($field_name));
     // Add 5 custom fields
-    for($i = 0; $i < 5; $i++) {
+    for ($i = 0; $i < 5; $i++) {
       do{
         $field_name = strtolower($this->randomName());
       } while (field_info_field($field_name));
@@ -47,28 +51,28 @@ class BundleInherit extends  DrupalWebTestCase{
     ));
   }
   
-  public function inheritPerform(){
+  public function inheritPerform() {
     // When implementing inheritance on node entity type we should delete body field first.
-    if($body_field_instance = field_info_instance('node', 'body', $this->child_type->type)){
+    if ($body_field_instance = field_info_instance('node', 'body', $this->child_type->type)) {
       field_delete_instance($body_field_instance);
     }
     
     // Perform inherit operations
     bundle_inherit_perform('node', $this->child_type->type, $this->parent_type->type, TRUE);
     
-    $type_inherited = db_query('SELECT 1 FROM {bundle_hierarchy} WHERE entity_type = :entity_type AND bundle = :bundle AND bundle_parent = :bundle_parent', array(':entity_type' => 'node',':bundle' => $this->child_type->type, ':bundle_parent' => $this->parent_type->type))->fetchField();
+    $type_inherited = db_query('SELECT 1 FROM {bundle_hierarchy} WHERE entity_type = :entity_type AND bundle = :bundle AND bundle_parent = :bundle_parent', array(':entity_type' => 'node', ':bundle' => $this->child_type->type, ':bundle_parent' => $this->parent_type->type))->fetchField();
     $this->assertTrue($type_inherited, t('Type was inherited.'));
     
    // Check if fields instances was succesfuly inherited
     $n = 1;
-    foreach($this->custom_fields as $field_name => $field){
+    foreach ($this->custom_fields as $field_name => $field) {
       $parent_type_field_instance = $this->custom_fields[$field_name]['instance'];
       $child_type_field_instance = field_info_instance('node', $field_name, $this->child_type->type);
       $this->assertTrue($this->compareInstances($parent_type_field_instance, $child_type_field_instance), t('Child field instance %n is equal to the parent one', array('%n' => $n++)));
     }
   }
   
-  public function fieldInstanceCreate(){
+  public function fieldInstanceCreate() {
     field_create_instance(array(
       'field_name' => $this->extra_field['field']['field_name'],
       'entity_type' => 'node',
@@ -79,28 +83,37 @@ class BundleInherit extends  DrupalWebTestCase{
     $this->assertTrue($this->compareInstances($parent_type_field_instance, $child_type_field_instance), t('The field instance attached to the parent type was succesfuly attached to the child type and equal to the parent one.'));
   }
   
-  public function fieldInstanceUpdate(){
+  public function fieldInstanceUpdate() {
     $this->extra_field['instance']['label'] = $this->randomString();
-    $this->extra_field['instance']['required'] = true;
+    $this->extra_field['instance']['required'] = TRUE;
     field_update_instance($this->extra_field['instance']);
     $child_type_field_instance = field_info_instance('node', $this->extra_field['field']['field_name'], $this->child_type->type);
     $this->assertTrue($this->compareInstances($this->extra_field['instance'], $child_type_field_instance), t('Child type field instance is equal to the parent one after updating.'));
   }
   
-  public function fieldInstanceDelete(){
+  public function fieldInstanceDelete() {
     field_delete_instance($this->extra_field['instance']);
     $child_type_field_instance = field_info_instance('node', $this->extra_field['field']['field_name'], $this->child_type->type);
     $this->assertTrue($child_type_field_instance['locked'] == FALSE, t('Child type field instance was succesfuly deleted when the parent type one was deleted.'));
   }
   
-  public function testCRUD(){
+  /**
+   * Run complex CRUD test based on node entity type.
+   */
+  public function testCRUD() {
     $this->inheritPerform();
     $this->fieldInstanceCreate();
     $this->fieldInstanceUpdate();
     $this->fieldInstanceDelete();
   }
   
-  private function compareInstances($a, $b){
+  /**
+   * Helper function to compare two instances indeferent of their 'id', 'bundle' and 'locked' fields.
+   * @param type $a First instance
+   * @param type $b Second instance
+   * @return type TRUE if $a and $b are equal.
+   */
+  private function compareInstances($a, $b) {
     unset($a['id'], $a['bundle'], $a['locked']);
     unset($b['id'], $b['bundle'], $b['locked']);
     return $a == $b;
