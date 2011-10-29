@@ -1,4 +1,5 @@
 name = Bundle Inheritance Node
 description = Allow to inherit one node type from other
 dependencies[] = bundle_inherit
+files[] = bundle_inherit_node.test
 core = 7.x

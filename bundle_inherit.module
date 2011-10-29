@@ -40,6 +40,11 @@ function bundle_inherit_perform($entity_type, $bundle, $bundle_parent, $strict =
         'bundle_parent' => $bundle_parent
       ))
       ->execute();
+    watchdog('bundle_inherit', 'The %bundle bundle of the entity type %type was STRICTLY inherited from %parent_bundle bundle.', array('%bundle' => $bundle, '%bundle_parent' => $bundle_parent, '%type' => $entity_type));
+    drupal_static_reset('bundle_inherit_bundle_get_children');
+  }
+  else{
+    watchdog('bundle_inherit', 'The %bundle bundle of the entity type %type was SOFTLY inherited from %parent_bundle bundle.', array('%bundle' => $bundle, '%bundle_parent' => $bundle_parent, '%type' => $entity_type));
   }
 }
 
@@ -52,6 +57,7 @@ function bundle_inherit_field_create_instance($instance) {
   $children = bundle_inherit_bundle_get_children($instance['entity_type'], $instance['bundle']);
   foreach ($children as $bundle) {
     $new_instance = $instance;
+    unset($new_instance['id']);
     $new_instance['bundle'] = $bundle;
     $new_instance['locked'] = TRUE;
     field_create_instance($new_instance);
@@ -68,9 +74,15 @@ function bundle_inherit_field_update_instance($instance, $prior_instance) {
   $children = bundle_inherit_bundle_get_children($prior_instance['entity_type'], $prior_instance['bundle']);
 
   foreach ($children as $bundle) {
-    $new_instance = $instance;
-    $new_instance['bundle'] = $bundle;
-    $new_instance['locked'] = TRUE;
+    $old_instance = field_info_instance($instance['entity_type'], $instance['field_name'], $bundle);
+    
+    $new_instance = array(
+        'id' => $old_instance['id'],
+        'bundle' => $old_instance['bundle'],
+        'locked' => TRUE
+    );
+    $new_instance += $instance;
+    
     field_update_instance($new_instance);
   }
 }
