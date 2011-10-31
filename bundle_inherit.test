@@ -113,11 +113,11 @@ class BundleInherit extends  DrupalWebTestCase {
    * Helper function to compare two instances indeferent of their 'id',
    * 'bundle'and 'locked' fields.
    * @param $a
-   *  First instance.
+   *   First instance.
    * @param $b
-   *  Second instance.
+   *   Second instance.
    * @return
-   *  TRUE if $a and $b are equal.
+   *   TRUE if $a and $b are equal.
    */
   private function compareInstances($a, $b) {
     unset($a['id'], $a['bundle'], $a['locked']);

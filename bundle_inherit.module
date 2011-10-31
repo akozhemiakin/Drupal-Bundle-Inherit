@@ -160,7 +160,7 @@ function bundle_inherit_bundle_get_children_all($entity_type, $bundle_parent) {
  * Get parent of the selected entity bundle.
  *
  * @return
- *  Entity type parent type.
+ *   Entity type parent type.
  */
 function bundle_inherit_bundle_get_parent($entity_type, $bundle) {
   $parent = &drupal_static(__FUNCTION__);
@@ -179,11 +179,11 @@ function bundle_inherit_bundle_get_parent($entity_type, $bundle) {
  * Attach ineritance form to selected form element.
  *
  * @param $form
- *  Parent form element to attach inheritance form to.
+ *   Parent form element to attach inheritance form to.
  * @param $form_state
- *  From state from the parent form.
+ *   From state from the parent form.
  * @param $entity_type
- *  Entity for which bundle is creating for.
+ *   Entity for which bundle is creating for.
  */
 function bundle_inherit_attach_inherit_form(&$form, &$form_state, $entity_type) {
   $entity = entity_get_info($entity_type);
@@ -237,7 +237,7 @@ function bundle_inherit_attach_inherit_form(&$form, &$form_state, $entity_type) 
  * Should be executed when entity creation form is submiting.
  *
  * @param $bundle
- *  Newly created bundle name.
+ *   Newly created bundle name.
  */
 function bundle_inherit_attach_inherit_form_submit($bundle, &$form, &$form_state) {
   if (isset($form_state['values']['bundle_inherit']) && $form_state['values']['bundle_inherit']['inherit']) {
