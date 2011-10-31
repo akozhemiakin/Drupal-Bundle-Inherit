@@ -107,14 +107,15 @@ function bundle_inherit_field_delete_instance($instance) {
 }
 
 /**
- * Implements hook_form_FORMID_alter
+ * Implements hook_form_FORMID_alter().
  * 
  * Attach additional validation callback to the field_ui_field_overview_form. 
  * When adding new field instance to the parent type we should check that all of it children types hase not that field instances.
  * @param array $form
  * @param type $form_instance
- * @param type $form_id 
- * @see bundle_inherit_validate_field_instance_creation
+ * @param type $form_id
+ * 
+ * @see bundle_inherit_validate_field_instance_creation()
  */
 function bundle_inherit_form_field_ui_field_overview_form_alter(&$form, &$form_instance, $form_id) {
   $form['#validate'][] = 'bundle_inherit_validate_field_instance_creation';
@@ -128,7 +129,8 @@ function bundle_inherit_form_field_ui_field_overview_form_alter(&$form, &$form_i
  * 
  * @param type $form
  * @param type $form_state
- * @see bundle_inherit_form_field_ui_field_overview_form_alter
+ * 
+ * @see bundle_inherit_form_field_ui_field_overview_form_alter()
  */
 function bundle_inherit_validate_field_instance_creation($form, &$form_state) {
   $form_values = $form_state['values']['fields'];
@@ -195,10 +197,10 @@ function bundle_inherit_bundle_get_parent($entity_type, $bundle) {
   $parent = &drupal_static(__FUNCTION__);
   if (!isset($parent[$entity_type][$bundle])) {
     $parent[$entity_type][$bundle] = db_select('bundle_hierarchy', 'bh')
-           ->fields('bh', array('bundle_parent'))
-           ->condition('bh.bundle', $bundle)
-           ->execute()
-           ->fetchField();
+      ->fields('bh', array('bundle_parent'))
+      ->condition('bh.bundle', $bundle)
+      ->execute()
+      ->fetchField();
     if (!$parent[$entity_type][$bundle]) $parent[$entity_type][$bundle] = '';
   }
   return $parent[$entity_type][$bundle];
