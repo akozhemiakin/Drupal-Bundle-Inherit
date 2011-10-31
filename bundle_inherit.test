@@ -24,12 +24,12 @@ class BundleInherit extends  DrupalWebTestCase {
     $this->parentType = $this->drupalCreateContentType();
     $this->childType = $this->drupalCreateContentType();
     // Create custom field
-    do{
+    do {
       $field_name = drupal_strtolower($this->randomName());
     } while (field_info_field($field_name));
     // Add 5 custom fields
     for ($i = 0; $i < 5; $i++) {
-      do{
+      do {
         $field_name = drupal_strtolower($this->randomName());
       } while (field_info_field($field_name));
       $this->customFields[$field_name]['field'] = field_create_field(array(
@@ -43,7 +43,7 @@ class BundleInherit extends  DrupalWebTestCase {
       ));
       $this->customFields[$field_name]['instance'] = field_info_instance('node', $field_name, $this->parentType->type);
     }
-    do{
+    do {
       $field_name = drupal_strtolower($this->randomName());
     } while (field_info_field($field_name));
     $this->extraField['field'] = field_create_field(array(
