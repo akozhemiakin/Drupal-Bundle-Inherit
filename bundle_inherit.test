@@ -1,7 +1,6 @@
 <?php
 /**
  * @file
- * 
  * Tests for bundle_inherit module.
  */
 
@@ -114,7 +113,7 @@ class BundleInherit extends  DrupalWebTestCase {
    *  First instance
    * @param $b
    *  Second instance
-   * @return 
+   * @return
    *  TRUE if $a and $b are equal.
    */
   private function compareInstances($a, $b) {

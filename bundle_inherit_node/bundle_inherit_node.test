@@ -1,7 +1,6 @@
 <?php
 /**
  * @file
- * 
  * Tests for bundle_inherit_node module.
  */
 
