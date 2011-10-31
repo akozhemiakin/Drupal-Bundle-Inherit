@@ -114,8 +114,6 @@ function bundle_inherit_field_delete_instance($instance) {
  * @param array $form
  * @param type $form_instance
  * @param type $form_id
- * 
- * @see bundle_inherit_validate_field_instance_creation()
  */
 function bundle_inherit_form_field_ui_field_overview_form_alter(&$form, &$form_instance, $form_id) {
   $form['#validate'][] = 'bundle_inherit_validate_field_instance_creation';
@@ -129,8 +127,6 @@ function bundle_inherit_form_field_ui_field_overview_form_alter(&$form, &$form_i
  * 
  * @param type $form
  * @param type $form_state
- * 
- * @see bundle_inherit_form_field_ui_field_overview_form_alter()
  */
 function bundle_inherit_validate_field_instance_creation($form, &$form_state) {
   $form_values = $form_state['values']['fields'];
