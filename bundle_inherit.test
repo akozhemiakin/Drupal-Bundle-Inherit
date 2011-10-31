@@ -1,7 +1,8 @@
 <?php
 /**
  * @file
- * Tests for bundle_inherit module
+ * 
+ * Tests for bundle_inherit module.
  */
 
 class BundleInherit extends  DrupalWebTestCase {
@@ -109,9 +110,12 @@ class BundleInherit extends  DrupalWebTestCase {
 
   /**
    * Helper function to compare two instances indeferent of their 'id', 'bundle' and 'locked' fields.
-   * @param type $a First instance
-   * @param type $b Second instance
-   * @return type TRUE if $a and $b are equal.
+   * @param $a
+   *  First instance
+   * @param $b
+   *  Second instance
+   * @return 
+   *  TRUE if $a and $b are equal.
    */
   private function compareInstances($a, $b) {
     unset($a['id'], $a['bundle'], $a['locked']);

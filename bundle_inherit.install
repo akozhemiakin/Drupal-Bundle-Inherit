@@ -5,9 +5,7 @@
  */
 
 /**
- * Implements hook_schema();
- * 
- * @return string 
+ * Implements hook_schema().
  */
 function bundle_inherit_schema() {
   $schema['bundle_hierarchy'] = array(

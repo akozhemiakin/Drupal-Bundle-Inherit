@@ -7,10 +7,7 @@
 
 /**
  * 
- * Implements hook_form_alter();
- * @param unknown_type $form
- * @param unknown_type $form_state
- * @param unknown_type $form_id
+ * Implements hook_form_alter().
  */
 function bundle_inherit_node_form_alter(&$form, &$form_state, $form_id) {
   $entity = entity_get_info('node');
@@ -25,8 +22,6 @@ function bundle_inherit_node_form_alter(&$form, &$form_state, $form_id) {
 /**
  * 
  * Additional submit handler to the 'node_type_form' form. Perform inherit operations.
- * @param unknown_type $form
- * @param unknown_type $form_state
  */
 function bundle_inherit_node_form_submit(&$form, &$form_state) {
   /**

@@ -1,7 +1,8 @@
 <?php
 /**
  * @file
- * Tests for bundle_inherit_node module
+ * 
+ * Tests for bundle_inherit_node module.
  */
 
 class BundleInheritTestCase extends DrupalWebTestCase {
@@ -24,10 +25,10 @@ class BundleInheritTestCase extends DrupalWebTestCase {
     $this->child_type_name = drupal_strtolower($this->randomName());
     $this->drupalLogin($this->priveleged_user);
 
-    // Add new content type
+    // Add new content type.
     $this->parent_type = $this->drupalCreateContentType();
 
-    // Add 5 custom fields
+    // Add 5 custom fields.
     for ($i = 0; $i < 5; $i++) {
       do{
         $field_name = drupal_strtolower($this->randomName());
@@ -45,7 +46,7 @@ class BundleInheritTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Create new content type. Strictly inherit it from content type created in setUp();
+   * Create new content type. Strictly inherit it from content type created in setUp().
    */
   public function testInherit() {
     $edit = array(
