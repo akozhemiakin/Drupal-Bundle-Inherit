@@ -39,3 +39,28 @@ function bundle_inherit_schema() {
 
   return $schema;
 }
+
+
+/**
+ * Implements hook_uninstall().
+ *
+ * We should remove 'locked' state from all inherited fields instances.
+ *
+ * @todo
+ *   Maybe some better way to implement this function exists (talking about
+ *   performance). But anyway we are getting info about instances from cache
+ *   so I think that this implementation is more stable and logicaly loocking.
+ */
+function bundle_inherit_uninstall(){
+  $records = db_select('bundle_hierarchy', 'bh')
+    ->fields('bh')
+    ->execute();
+  foreach($records as $record){
+    $instances = field_info_instances($record->entity_type, $record->bundle_parent);
+    foreach($instances as $instance){
+      $inherited_instance = field_info_instance($record->entity_type, $instance['field_name'], $record->bundle);
+      $inherited_instance['locked'] = FALSE;
+      field_update_instance($inherited_instance);
+    }
+  }
+}
