@@ -255,3 +255,23 @@ function bundle_inherit_field_attach_delete_bundle($entity_type, $bundle, $insta
     ->condition(db_or()->condition('bundle_parent', $bundle)->condition('bundle', $bundle))
     ->execute();
 }
+
+/**
+ * Implements hook_field_attach_rename_bundle().
+ */
+function bundle_inherit_field_attach_rename_bundle($entity_type, $bundle_old, $bundle_new){
+  db_update('bundle_hierarchy')
+    ->condition('entity_type', $entity_type)
+    ->condition('bundle', $bundle_old)
+    ->fields(array(
+        'bundle' => $bundle_new
+    ))
+    ->execute();
+  db_update('bundle_hierarchy')
+    ->condition('entity_type', $entity_type)
+    ->condition('bundle_parent', $bundle_old)
+    ->fields(array(
+        'bundle_parent' => $bundle_new
+    ))
+    ->execute();
+}
