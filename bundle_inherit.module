@@ -184,52 +184,69 @@ function bundle_inherit_bundle_get_parent($entity_type, $bundle) {
  *   From state from the parent form.
  * @param $entity_type
  *   Entity for which bundle is creating for.
+ * @param $bundle
+ *   If editing existing bundle value for this argument should be provided.
  */
-function bundle_inherit_attach_inherit_form(&$form, &$form_state, $entity_type) {
+function bundle_inherit_attach_inherit_form(&$form, &$form_state, $entity_type, $bundle = '') {
   $entity = entity_get_info($entity_type);
   if (count($entity['bundles']) > 0) {
-    $form['bundle_inherit'] = array(
-      '#type' => 'fieldset',
-      '#tree' => TRUE,
-      '#title' => t('Inheritance')
-    );
-    $form['bundle_inherit']['entity_type'] = array('#type' => 'value', '#value' => $entity_type);
-    $form['bundle_inherit']['#parents'] = array('bundle_inherit');
-    $form['bundle_inherit']['inherit'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Inherit from other')
-    );
+    if (empty($bundle)) {
+      $form['bundle_inherit'] = array(
+        '#type' => 'fieldset',
+        '#tree' => TRUE,
+        '#title' => t('Inheritance')
+      );
+      $form['bundle_inherit']['entity_type'] = array('#type' => 'value', '#value' => $entity_type);
+      $form['bundle_inherit']['#parents'] = array('bundle_inherit');
+      $form['bundle_inherit']['inherit'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Inherit from other')
+      );
 
-    foreach ($entity['bundles'] as $bundle_name => $bundle) {
-      $options[$bundle_name] = $bundle['label'];
+      foreach ($entity['bundles'] as $bundle_name => $bundle) {
+        $options[$bundle_name] = $bundle['label'];
+      }
+      $form['bundle_inherit']['parent_type'] = array(
+        '#type' => 'select',
+        '#options' => $options,
+        '#title' => t('Parent'),
+        '#states' => array(
+          // Hide the inheritance settings when inherit checkbox is disabled.
+          'invisible' => array(
+            'input[name="bundle_inherit[inherit]"]' => array('checked' => FALSE),
+          ),
+        ),
+      );
+      $form['bundle_inherit']['mode'] = array(
+        '#type' => 'radios',
+        '#options' => array(
+          'strict' => t('Strict inherit'),
+          'soft' => t('Soft inherit'),
+        ),
+        '#default_value' => 'strict',
+        '#required' => TRUE,
+        '#states' => array(
+          // Hide the inheritance settings when inherit checkbox is disabled.
+          'invisible' => array(
+           'input[name="bundle_inherit[inherit]"]' => array('checked' => FALSE),
+          ),
+        ),
+        '#title' => t('Inheritance mode')
+      );
     }
-    $form['bundle_inherit']['parent_type'] = array(
-      '#type' => 'select',
-      '#options' => $options,
-      '#title' => t('Parent'),
-      '#states' => array(
-        // Hide the inheritance settings when inherit checkbox is disabled.
-        'invisible' => array(
-          'input[name="bundle_inherit[inherit]"]' => array('checked' => FALSE),
-        ),
-      ),
-    );
-    $form['bundle_inherit']['mode'] = array(
-      '#type' => 'radios',
-      '#options' => array(
-        'strict' => t('Strict inherit'),
-        'soft' => t('Soft inherit'),
-      ),
-      '#default_value' => 'strict',
-      '#required' => TRUE,
-      '#states' => array(
-        // Hide the inheritance settings when inherit checkbox is disabled.
-        'invisible' => array(
-         'input[name="bundle_inherit[inherit]"]' => array('checked' => FALSE),
-        ),
-      ),
-      '#title' => t('Inheritance mode')
-    );
+    else {
+      $parent_bundle_name = bundle_inherit_bundle_get_parent($entity_type, $bundle);
+      if (!empty($parent_bundle_name)) {
+        $form['bundle_inherit'] = array(
+          '#type' => 'fieldset',
+          '#tree' => TRUE,
+          '#title' => t('Inheritance')
+        );
+        $form['bundle_inherit']['message'] = array(
+          '#markup' => t('This bundle was inherited from !parent_bundle bundle.', array('!parent_bundle' => l($entity['bundles'][$parent_bundle_name]['label'], $entity['bundles'][$parent_bundle_name]['admin']['real path'].'/fields')))
+        );
+      }
+    }
   }
 }
 
