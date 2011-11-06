@@ -292,3 +292,87 @@ function bundle_inherit_field_attach_rename_bundle($entity_type, $bundle_old, $b
     ))
     ->execute();
 }
+
+/**
+ * Sort rows hierarchycly and allow to indent them.
+ * @param $entity_type
+ *   Entity type.
+ * @param $rows
+ *   Rows.
+ * @param $apply_indention
+ *   Whether ty apply indention or not. Default to TRUE.
+ * @param $indention_options
+ *   (optional) Indention options. Structured array with following keys:
+ *   - 'indention callback':  The function to call to indent row.
+ *   Takes $row, $indention_options and $level as arguments. $level is the
+ *   bundle level in hierarchy started from zero. Default callback is
+ *   bundle_inherit_sort_rows_default_indent.
+ *   - 'name col index': Used in default indention callback. If each row is an
+ *   array you can specify the column to indent. If not you cen set 'name col
+ *   index' to 'self' and entire row will be indented.
+ *   - 'indenter': Used in default indention callback. It is like a delimiter
+ *   in implode() function. Will be multiplied on the bundle level and prepend
+ *   the row value.
+ */
+function bundle_inherit_sort_rows($entity_type, &$rows, $apply_indention = TRUE, $indention_options = array()){
+  $indention_options += array(
+    'name col index' => 0,
+    'indenter' => '-&nbsp;-&nbsp;',
+    'indention callback' => 'bundle_inherit_sort_rows_default_indent',
+    'apply indention' => $apply_indention
+  );
+  $top_level_rows = $child_rows = $new_rows = array();
+  // Separate top level and child rows
+  foreach ($rows as $bundle_name => $row) {
+    $parent = bundle_inherit_bundle_get_parent($entity_type, $bundle_name);
+    if (empty($parent)) {
+      $top_level_rows[$bundle_name] = $row;
+    }
+    else {
+      $child_rows[$parent][$bundle_name] = $row;
+    }
+  }
+  // Create new, sorted and (if allowed) indented rows array
+  foreach ($top_level_rows as $bundle_name => $row) {
+    $new_rows[$bundle_name] = $row;
+    _bundle_inherit_sort_rows_populate($child_rows, $bundle_name, $new_rows, $indention_options);
+  }
+  $rows = $new_rows;
+}
+
+/**
+ * Default indention function for bundle_inherit_sort_rows.
+ */
+function bundle_inherit_sort_rows_default_indent(&$row, $indention_options, $level){
+  if ($indention_options['name col index'] === 'self') {
+    if (!is_array($row)){
+      $row['data'] = str_repeat($indention_options['indenter'], $level) . $row['data'];
+    }
+    elseif (isset($row['data'])) {
+      $row = str_repeat($indention_options['indenter'], $level) . $row;
+    }
+  }
+  else {
+    if (!is_array($row[$indention_options['name col index']])) {
+      $row[$indention_options['name col index']] = str_repeat($indention_options['indenter'], $level) . $row[$indention_options['name col index']];
+    }
+    elseif (isset($row[$indention_options['name col index']]['data'])) {
+      $row[$indention_options['name col index']]['data'] = str_repeat($indention_options['indenter'], $level) . $row[$indention_options['name col index']]['data'];
+    }
+  }
+}
+
+/**
+ * Helper function for bundle_inherit_sort_rows_populate().
+ */
+function _bundle_inherit_sort_rows_populate($child_rows, $bundle_parent_name, &$rows, $indention_options, $level = 1) {
+  if (array_key_exists($bundle_parent_name, $child_rows)) {
+    foreach ($child_rows[$bundle_parent_name] as $bundle_name => $row) {
+      if ($indention_options['apply indention'] && function_exists($indention_options['indention callback'])) {
+        $indention_options['indention callback']($row, $indention_options, $level);
+      }
+      $rows[] = $row;
+      _bundle_inherit_sort_rows_populate($child_rows, $bundle_name, $rows, $indention_options, $level + 1);
+    }
+  }
+}

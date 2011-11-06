@@ -90,20 +90,12 @@ function bundle_inherit_node_overview_types() {
         $row[] = array('data' => '');
       }
 
-      $parent_type = bundle_inherit_bundle_get_parent('node', $type->type);
-      if (empty($parent_type)) {
-        $top_items[$type->type] = $row;
-      }
-      else {
-        $child_items[$parent_type][$type->type] = $row;
-      }
+      $rows[$type->type] = $row;
     }
   }
 
-  foreach ($top_items as $type => $row) {
-    $rows[] = $row;
-    _bundle_inherit_node_overview_types_populate_rows($child_items, $type, $rows);
-  }
+  // Sort and indent rows
+  bundle_inherit_sort_rows('node', $rows);
 
   $build['node_table'] = array(
     '#theme' => 'table',
@@ -113,17 +105,4 @@ function bundle_inherit_node_overview_types() {
   );
 
   return $build;
-}
-
-/**
- * Helper function for bundle_inherit_node_overview_types().
- */
-function _bundle_inherit_node_overview_types_populate_rows($child_items, $parent, &$rows, $level = 1) {
-  if (array_key_exists($parent, $child_items)) {
-    foreach ($child_items[$parent] as $type => $row) {
-      $row[0] = str_repeat('-&nbsp;&nbsp;-&nbsp;&nbsp;', $level) . $row[0];
-      $rows[] = $row;
-      _bundle_inherit_node_overview_types_populate_rows($child_items, $type, $rows, $level + 1);
-    }
-  }
 }

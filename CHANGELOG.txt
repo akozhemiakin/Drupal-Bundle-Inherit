@@ -1,0 +1,4 @@
+bundle_inherit 7.x-1.0-alpha2
+  Issue #1331948 by joachim: Fixed node content types page altering. Use hook_menu_alter instead of altering through hook_page_build.
+  Issue #1331954 by joachim: Added inheritance status message (with link to the parent bundle fields manage page) in the edit form of existing bundles. Fourth optional argument added to the bundle_inherit_attach_inherit_form() function.
+  Issue #1331940 by joachim: README.txt from ./bundle_inherit_node removed. README.txt from the root dir updated.
