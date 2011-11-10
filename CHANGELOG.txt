@@ -1,4 +1,5 @@
 bundle_inherit 7.x-1.x
+  Added hook_bundle_inherit_perform().
   Issue #1333796 by lemark: Add unified method to sort and indent bundles arrays.
 
 bundle_inherit 7.x-1.0-alpha2

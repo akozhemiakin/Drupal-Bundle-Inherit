@@ -39,6 +39,9 @@ function bundle_inherit_perform($entity_type, $bundle, $bundle_parent, $strict =
   else{
     watchdog('bundle_inherit', 'The %bundle bundle of the entity %type was SOFTLY inherited from %parent_bundle bundle.', array('%bundle' => $bundle, '%bundle_parent' => $bundle_parent, '%type' => $entity_type));
   }
+
+  // Allow third party modules to implement there own inherit logic.
+  module_invoke_all('bundle_inherit_perform', $entity_type, $bundle, $bundle_parent, $strict = TRUE);
 }
 
 /**
@@ -243,7 +246,7 @@ function bundle_inherit_attach_inherit_form(&$form, &$form_state, $entity_type, 
           '#title' => t('Inheritance')
         );
         $form['bundle_inherit']['message'] = array(
-          '#markup' => t('This bundle was inherited from !parent_bundle bundle.', array('!parent_bundle' => l($entity['bundles'][$parent_bundle_name]['label'], $entity['bundles'][$parent_bundle_name]['admin']['real path'].'/fields')))
+          '#markup' => t('This bundle was inherited from !parent_bundle bundle.', array('!parent_bundle' => l($entity['bundles'][$parent_bundle_name]['label'], $entity['bundles'][$parent_bundle_name]['admin']['real path'] . '/fields')))
         );
       }
     }
@@ -314,7 +317,7 @@ function bundle_inherit_field_attach_rename_bundle($entity_type, $bundle_old, $b
  *   in implode() function. Will be multiplied on the bundle level and prepend
  *   the row value.
  */
-function bundle_inherit_sort_rows($entity_type, &$rows, $apply_indention = TRUE, $indention_options = array()){
+function bundle_inherit_sort_rows($entity_type, &$rows, $apply_indention = TRUE, $indention_options = array()) {
   $indention_options += array(
     'name col index' => 0,
     'indenter' => '-&nbsp;-&nbsp;',
@@ -343,9 +346,9 @@ function bundle_inherit_sort_rows($entity_type, &$rows, $apply_indention = TRUE,
 /**
  * Default indention function for bundle_inherit_sort_rows.
  */
-function bundle_inherit_sort_rows_default_indent(&$row, $indention_options, $level){
+function bundle_inherit_sort_rows_default_indent(&$row, $indention_options, $level) {
   if ($indention_options['name col index'] === 'self') {
-    if (!is_array($row)){
+    if (!is_array($row)) {
       $row['data'] = str_repeat($indention_options['indenter'], $level) . $row['data'];
     }
     elseif (isset($row['data'])) {
