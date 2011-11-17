@@ -1,4 +1,6 @@
 bundle_inherit 7.x-1.x
+  Updated: All functions that return bundles (bundle_inherit_get_children, bundle_inherit_get_children_all, etc) will each bundle as an array with following keys: 'type', 'label'.
+  Added bundle_inherit_get_tree().
   Added hook_bundle_inherit_perform().
   Issue #1333796 by lemark: Add unified method to sort and indent bundles arrays.
 

@@ -40,6 +40,25 @@ function bundle_inherit_schema() {
   return $schema;
 }
 
+/**
+ * Implements hook_install().
+ */
+function bundle_inherit_install() {
+  $entity_types = entity_get_info();
+
+  // Set empty string as a parent bundle to the bundles which already exist
+  foreach ($entity_types as $type_name => $type) {
+    foreach ($type['bundles'] as $bundle_name => $bundle) {
+      db_insert('bundle_hierarchy')
+        ->fields(array(
+          'entity_type' => $type_name,
+          'bundle' => $bundle_name,
+          'bundle_parent' => ''
+        ))
+        ->execute();
+    }
+  }
+}
 
 /**
  * Implements hook_uninstall().

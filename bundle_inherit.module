@@ -26,13 +26,25 @@ function bundle_inherit_perform($entity_type, $bundle, $bundle_parent, $strict =
   }
   // Check if we perform strict inheritance.
   if ($strict) {
-    db_insert('bundle_hierarchy')
-      ->fields(array(
-        'entity_type' => $entity_type,
-        'bundle' => $bundle,
-        'bundle_parent' => $bundle_parent
-      ))
-      ->execute();
+    $exists = db_query('SELECT 1 FROM {bundle_hierarchy} WHERE entity_type = :entity_type AND bundle = :bundle', array(':entity_type' => $entity_type, ':bundle' => $bundle))->fetchField();
+    if ($exists) {
+      db_update('bundle_hierarchy')
+        ->fields(array(
+          'bundle_parent' => $bundle_parent
+        ))
+        ->condition('entity_type', $entity_type)
+        ->condition('bundle', $bundle)
+        ->execute();
+    }
+    else {
+      db_insert('bundle_hierarchy')
+        ->fields(array(
+          'entity_type' => $entity_type,
+          'bundle' => $bundle,
+          'bundle_parent' => $bundle_parent
+        ))
+        ->execute();
+    }
     watchdog('bundle_inherit', 'The %bundle bundle of the entity %type was STRICTLY inherited from %parent_bundle bundle.', array('%bundle' => $bundle, '%bundle_parent' => $bundle_parent, '%type' => $entity_type));
     drupal_static_reset('bundle_inherit_bundle_get_children');
   }
@@ -52,7 +64,7 @@ function bundle_inherit_field_create_instance($instance) {
   foreach ($children as $bundle) {
     $new_instance = $instance;
     unset($new_instance['id']);
-    $new_instance['bundle'] = $bundle;
+    $new_instance['bundle'] = $bundle['type'];
     $new_instance['locked'] = TRUE;
     field_create_instance($new_instance);
   }
@@ -65,7 +77,7 @@ function bundle_inherit_field_update_instance($instance, $prior_instance) {
   $children = bundle_inherit_bundle_get_children($prior_instance['entity_type'], $prior_instance['bundle']);
 
   foreach ($children as $bundle) {
-    $old_instance = field_info_instance($instance['entity_type'], $instance['field_name'], $bundle);
+    $old_instance = field_info_instance($instance['entity_type'], $instance['field_name'], $bundle['type']);
 
     $new_instance = array(
       'id' => $old_instance['id'],
@@ -85,7 +97,7 @@ function bundle_inherit_field_delete_instance($instance) {
   $children = bundle_inherit_bundle_get_children($instance['entity_type'], $instance['bundle']);
   foreach ($children as $bundle) {
     $new_instance = $instance;
-    $new_instance['bundle'] = $bundle;
+    $new_instance['bundle'] = $bundle['type'];
     $new_instance['locked'] = FALSE;
     try {
       field_update_instance($new_instance);
@@ -136,13 +148,24 @@ function bundle_inherit_validate_field_instance_creation($form, &$form_state) {
  */
 function bundle_inherit_bundle_get_children($entity_type, $bundle_parent) {
   $children = &drupal_static(__FUNCTION__);
+  if (!isset($children[$entity_type])) {
+    $children[$entity_type] = array();
+  }
   if (!isset($children[$entity_type][$bundle_parent])) {
-    $children[$entity_type][$bundle_parent] = db_select('bundle_hierarchy', 'bh')
+    $children[$entity_type][$bundle_parent] = array();
+    $entity_type_info = entity_get_info($entity_type);
+    $_children = db_select('bundle_hierarchy', 'bh')
       ->fields('bh', array('bundle'))
       ->condition('bundle_parent', $bundle_parent)
       ->condition('entity_type', $entity_type)
       ->execute()
       ->fetchCol();
+    foreach ($_children as $child) {
+      $children[$entity_type][$bundle_parent][$child] = array(
+        'type' => $child,
+        'label' => $entity_type_info['bundles'][$child]['label']
+      );
+    }
   }
   return $children[$entity_type][$bundle_parent];
 }
@@ -154,7 +177,7 @@ function bundle_inherit_bundle_get_children_all($entity_type, $bundle_parent) {
   $children = array();
   $children = bundle_inherit_bundle_get_children($entity_type, $bundle_parent);
   foreach ($children as $child) {
-    $children = array_merge($children, bundle_inherit_bundle_get_children_all($entity_type, $child));
+    $children = array_merge($children, bundle_inherit_bundle_get_children_all($entity_type, $child['type']));
   }
   return $children;
 }
@@ -263,6 +286,22 @@ function bundle_inherit_attach_inherit_form_submit($bundle, &$form, &$form_state
   if (isset($form_state['values']['bundle_inherit']) && $form_state['values']['bundle_inherit']['inherit']) {
     $bundle_inherit_values = $form_state['values']['bundle_inherit'];
     bundle_inherit_perform($bundle_inherit_values['entity_type'], $bundle, $bundle_inherit_values['parent_type'], $bundle_inherit_values['mode'] == 'strict' ? TRUE : FALSE);
+  }
+}
+
+/**
+ * Implements hook_field_attach_create_bundle().
+ */
+function bundle_inherit_field_attach_create_bundle($entity_type, $bundle) {
+  $exists = db_query('SELECT 1 FROM {bundle_hierarchy} WHERE entity_type = :entity_type AND bundle = :bundle', array(':entity_type' => $entity_type, ':bundle' => $bundle))->fetchField();
+  if (!$exists) {
+    db_insert('bundle_hierarchy')
+      ->fields(array(
+        'entity_type' => $entity_type,
+        'bundle' => $bundle,
+        'bundle_parent' => ''
+      ))
+      ->execute();
   }
 }
 
@@ -378,4 +417,21 @@ function _bundle_inherit_sort_rows_populate($child_rows, $bundle_parent_name, &$
       _bundle_inherit_sort_rows_populate($child_rows, $bundle_name, $rows, $indention_options, $level + 1);
     }
   }
+}
+
+/**
+ * Get bundles tree.
+ */
+function bundle_inherit_get_tree($entity_type, $parent_bundle_type = '') {
+  $tree = array();
+  $entity_type_info = entity_get_info($entity_type);
+  $children = bundle_inherit_bundle_get_children($entity_type, $parent_bundle_type);
+  foreach ($children as $child) {
+    $tree[$child['type']] = array(
+      'type' => $child['type'],
+      'label' => $child['label'],
+    );
+    $tree[$child['type']]['children'] = bundle_inherit_get_tree($entity_type, $child['type']);
+  }
+  return $tree;
 }
