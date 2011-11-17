@@ -422,16 +422,22 @@ function _bundle_inherit_sort_rows_populate($child_rows, $bundle_parent_name, &$
 /**
  * Get bundles tree.
  */
-function bundle_inherit_get_tree($entity_type, $parent_bundle_type = '') {
-  $tree = array();
-  $entity_type_info = entity_get_info($entity_type);
-  $children = bundle_inherit_bundle_get_children($entity_type, $parent_bundle_type);
-  foreach ($children as $child) {
-    $tree[$child['type']] = array(
-      'type' => $child['type'],
-      'label' => $child['label'],
-    );
-    $tree[$child['type']]['children'] = bundle_inherit_get_tree($entity_type, $child['type']);
+function bundle_inherit_get_tree($entity_type, $parent_bundle_type = '', $depth = 0) {
+  if ($depth == 0) {
+    $tree = &drupal_static(__FUNCTION__ . ':' . $parent_bundle_type);
+  }
+  if (!isset($tree)) {
+    $tree = array();
+    $entity_type_info = entity_get_info($entity_type);
+    $children = bundle_inherit_bundle_get_children($entity_type, $parent_bundle_type);
+    foreach ($children as $child) {
+      $tree[$child['type']] = array(
+        'type' => $child['type'],
+        'label' => $child['label'],
+        'depth' => $depth
+      );
+      $tree = array_merge($tree, bundle_inherit_get_tree($entity_type, $child['type'], $depth + 1));
+    }
   }
   return $tree;
 }

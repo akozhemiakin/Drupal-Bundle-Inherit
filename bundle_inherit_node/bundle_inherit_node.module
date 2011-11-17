@@ -106,3 +106,7 @@ function bundle_inherit_node_overview_types() {
 
   return $build;
 }
+
+function _bundle_inherit_node_overview_types() {
+
+}
