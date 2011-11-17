@@ -64,13 +64,14 @@ function bundle_inherit_node_overview_types() {
   $header = array(t('Name'), array('data' => t('Operations'), 'colspan' => $field_ui ? '4' : '2'));
   $rows = array();
 
+  $tree = bundle_inherit_get_tree('node');
+
   // Firstly we need to iterate through node types wich has children types
-  $top_items = $child_items = array();
-  foreach ($names as $key => $name) {
-    $type = $types[$key];
+  foreach ($tree as $bundle_type => $bundle) {
+    $type = $types[$bundle_type];
     if (node_hook($type->type, 'form')) {
       $type_url_str = str_replace('_', '-', $type->type);
-      $row = array(theme('node_admin_overview', array('name' => $name, 'type' => $type)));
+      $row = array(str_repeat('- - ', $bundle['depth']) . theme('node_admin_overview', array('name' => $bundle_type, 'type' => $type)));
       // Set the edit column.
       $row[] = array('data' => l(t('edit'), 'admin/structure/types/manage/' . $type_url_str));
 
@@ -94,9 +95,6 @@ function bundle_inherit_node_overview_types() {
     }
   }
 
-  // Sort and indent rows
-  bundle_inherit_sort_rows('node', $rows);
-
   $build['node_table'] = array(
     '#theme' => 'table',
     '#header' => $header,
@@ -105,8 +103,4 @@ function bundle_inherit_node_overview_types() {
   );
 
   return $build;
-}
-
-function _bundle_inherit_node_overview_types() {
-
 }

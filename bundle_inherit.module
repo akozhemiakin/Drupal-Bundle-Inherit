@@ -363,22 +363,19 @@ function bundle_inherit_sort_rows($entity_type, &$rows, $apply_indention = TRUE,
     'indention callback' => 'bundle_inherit_sort_rows_default_indent',
     'apply indention' => $apply_indention
   );
-  $top_level_rows = $child_rows = $new_rows = array();
-  // Separate top level and child rows
-  foreach ($rows as $bundle_name => $row) {
-    $parent = bundle_inherit_bundle_get_parent($entity_type, $bundle_name);
-    if (empty($parent)) {
-      $top_level_rows[$bundle_name] = $row;
-    }
-    else {
-      $child_rows[$parent][$bundle_name] = $row;
+
+  $tree = bundle_inherit_get_tree($entity_type);
+  $new_rows = array();
+  foreach ($tree as $bundle_type => $bundle) {
+    if (isset($rows[$bundle_type])) {
+      $new_row = $rows[$bundle_type];
+      if ($indention_options['apply indention']) {
+        $indention_options['indention callback']($new_row, $indention_options, $bundle['depth']);
+      }
+      $new_rows[] = $new_row;
     }
   }
-  // Create new, sorted and (if allowed) indented rows array
-  foreach ($top_level_rows as $bundle_name => $row) {
-    $new_rows[$bundle_name] = $row;
-    _bundle_inherit_sort_rows_populate($child_rows, $bundle_name, $new_rows, $indention_options);
-  }
+
   $rows = $new_rows;
 }
 
@@ -400,21 +397,6 @@ function bundle_inherit_sort_rows_default_indent(&$row, $indention_options, $lev
     }
     elseif (isset($row[$indention_options['name col index']]['data'])) {
       $row[$indention_options['name col index']]['data'] = str_repeat($indention_options['indenter'], $level) . $row[$indention_options['name col index']]['data'];
-    }
-  }
-}
-
-/**
- * Helper function for bundle_inherit_sort_rows_populate().
- */
-function _bundle_inherit_sort_rows_populate($child_rows, $bundle_parent_name, &$rows, $indention_options, $level = 1) {
-  if (array_key_exists($bundle_parent_name, $child_rows)) {
-    foreach ($child_rows[$bundle_parent_name] as $bundle_name => $row) {
-      if ($indention_options['apply indention'] && function_exists($indention_options['indention callback'])) {
-        $indention_options['indention callback']($row, $indention_options, $level);
-      }
-      $rows[] = $row;
-      _bundle_inherit_sort_rows_populate($child_rows, $bundle_name, $rows, $indention_options, $level + 1);
     }
   }
 }
