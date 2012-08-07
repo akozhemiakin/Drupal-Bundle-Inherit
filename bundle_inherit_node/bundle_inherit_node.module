@@ -59,7 +59,6 @@ function bundle_inherit_node_menu_alter(&$items) {
  */
 function bundle_inherit_node_overview_types() {
   $types = node_type_get_types();
-  $names = node_type_get_names();
   $field_ui = module_exists('field_ui');
   $header = array(t('Name'), array('data' => t('Operations'), 'colspan' => $field_ui ? '4' : '2'));
   $rows = array();
@@ -71,7 +70,7 @@ function bundle_inherit_node_overview_types() {
     $type = $types[$bundle_type];
     if (node_hook($type->type, 'form')) {
       $type_url_str = str_replace('_', '-', $type->type);
-      $row = array(str_repeat('- - ', $bundle['depth']) . theme('node_admin_overview', array('name' => $bundle_type, 'type' => $type)));
+      $row = array(str_repeat('- - ', $bundle['depth']) . theme('node_admin_overview', array('name' => $bundle['label'], 'type' => $type)));
       // Set the edit column.
       $row[] = array('data' => l(t('edit'), 'admin/structure/types/manage/' . $type_url_str));
 
