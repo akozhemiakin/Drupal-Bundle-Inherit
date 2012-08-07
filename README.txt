@@ -23,11 +23,6 @@ Structure:
   module (included in Bundle Inherit module basic package, presented on this
   page) for example of bundle inheritance logic implementation.
 
-Demo
-  Demo site: http://demo.etreyd.com/
-  Demo login: demo
-  Demo password: demo
-
 Module project page:
   http://drupal.org/project/bundle_inherit
 
@@ -37,3 +32,4 @@ To submit bug reports and feature suggestions, or to track changes:
 -- MAINTAINERS --
 
 lemark - http://drupal.org/user/317870
+alexweber - http://drupal.org/user/850856
