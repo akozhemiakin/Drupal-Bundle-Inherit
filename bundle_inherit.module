@@ -423,3 +423,66 @@ function bundle_inherit_get_tree($entity_type, $parent_bundle_type = '', $depth 
   }
   return $tree;
 }
+
+/**
+ * Implements hook_menu_alter().
+ */
+function bundle_inherit_menu_alter(&$items) {
+  foreach (entity_get_info() as $entity_type => $entity_info) {
+    if ($entity_info['fieldable']) {
+      foreach ($entity_info['bundles'] as $bundle_name => $bundle_info) {
+        if (isset($bundle_info['admin'])) {
+          // Extract path information from the bundle.
+          $path = $bundle_info['admin']['path'];
+          
+          // This is the position of the %field_ui_menu placeholder in the
+          // items below.
+          $field_position = count(explode('/', $path)) + 1;
+
+          $items["$path/fields/%field_ui_menu"]['access arguments'] = array($items["$path/fields/%field_ui_menu"]['access callback'], $items["$path/fields/%field_ui_menu"]['access arguments'], $field_position);
+          $items["$path/fields/%field_ui_menu"]['access callback'] = 'bundle_inherit_access_gate';
+          
+          $items["$path/fields/%field_ui_menu/edit"]['access arguments'] = array($items["$path/fields/%field_ui_menu/edit"]['access callback'], $items["$path/fields/%field_ui_menu/edit"]['access arguments'], $field_position);
+          $items["$path/fields/%field_ui_menu/edit"]['access callback'] = 'bundle_inherit_access_gate';
+          
+          $items["$path/fields/%field_ui_menu/delete"]['access arguments'] = array($items["$path/fields/%field_ui_menu/delete"]['access callback'], $items["$path/fields/%field_ui_menu/delete"]['access arguments'], $field_position);
+          $items["$path/fields/%field_ui_menu/delete"]['access callback'] = 'bundle_inherit_access_gate';
+          
+          $items["$path/fields/%field_ui_menu/field-settings"]['access arguments'] = array($items["$path/fields/%field_ui_menu/field-settings"]['access callback'], $items["$path/fields/%field_ui_menu/field-settings"]['access arguments'], $field_position);
+          $items["$path/fields/%field_ui_menu/field-settings"]['access callback'] = 'bundle_inherit_access_gate';
+          
+          $items["$path/fields/%field_ui_menu/widget-type"]['access arguments'] = array($items["$path/fields/%field_ui_menu/widget-type"]['access callback'], $items["$path/fields/%field_ui_menu/widget-type"]['access arguments'], $field_position);
+          $items["$path/fields/%field_ui_menu/widget-type"]['access callback'] = 'bundle_inherit_access_gate';
+          
+          $items["$path/fields/%field_ui_menu/delete"]['access arguments'] = array($items["$path/fields/%field_ui_menu/delete"]['access callback'], $items["$path/fields/%field_ui_menu/delete"]['access arguments'], $field_position);
+          $items["$path/fields/%field_ui_menu/delete"]['access callback'] = 'bundle_inherit_access_gate';
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Prevent user from editing\deleting inherited field instance.
+ */
+function bundle_inherit_access_gate($callback, $arguments, $instance) {
+    // First check parent restrictions
+    $access = call_user_func_array($callback, $arguments);
+    if (false == $access) {
+      return false;
+    }
+    // Check if this field was inherited
+    $bundle = $instance['bundle'];
+    $entity_type = $instance['entity_type'];
+    $field_name = $instance['field_name'];
+    
+    $parent = bundle_inherit_bundle_get_parent($entity_type, $bundle);
+    if (!empty($parent)) {
+      // Check if parent bundle has this field attached
+      if (field_info_instance($entity_type, $field_name, $parent)) {
+          return false;
+      }
+    }
+    
+    return true;
+}
