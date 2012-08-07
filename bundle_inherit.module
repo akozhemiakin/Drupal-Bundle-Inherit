@@ -117,6 +117,24 @@ function bundle_inherit_field_delete_instance($instance) {
  */
 function bundle_inherit_form_field_ui_field_overview_form_alter(&$form, &$form_instance, $form_id) {
   $form['#validate'][] = 'bundle_inherit_validate_field_instance_creation';
+
+  $bundle = $form['#bundle'];
+  $entity_type = $form['#entity_type'];
+
+  // Remove links for inherited fields.
+  foreach ($form['fields'] as $field_name => &$value) {
+    if (isset($value['#row_type']) && $value['#row_type'] === 'field') {
+      // Check if this field is inherited.
+      $parent = bundle_inherit_bundle_get_parent($entity_type, $bundle);
+      if (!empty($parent)) {
+        // Check if parent bundle has this field attached
+        if (field_info_instance($entity_type, $field_name, $parent)) {
+          $value['type'] = array('#markup' => $value['type']['#title']);
+          $value['widget_type'] = array('#markup' => $value['widget_type']['#title']);
+        }
+      }
+    }
+  }
 }
 
 /**
